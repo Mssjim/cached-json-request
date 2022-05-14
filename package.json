@@ -1,0 +1,24 @@
+{
+  "name": "cached-json-request",
+  "version": "1.0.0",
+  "description": "Node.js module to perform request and caching in json format.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mssjim/cached-json-request.git"
+  },
+  "keywords": [
+    "json",
+    "node.js",
+    "request"
+  ],
+  "author": "JappaBR, Mssjim",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mssjim/cached-json-request/issues"
+  },
+  "homepage": "https://github.com/Mssjim/cached-json-request#readme"
+}
