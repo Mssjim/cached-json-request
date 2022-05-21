@@ -1,11 +1,14 @@
 const request = require('request');
 const fs = require('fs');
 const { stringify } = require('querystring');
+const { getSystemErrorMap } = require('util');
 
-var api = "https://pokeapi.co/api/v2/pokemon/1";
-verify();
+module.exports.main = function(api){
+    verify(api)
+}
 
-function requestJSON(){
+
+function requestJSON(api){
     return new Promise(async function(dat, err){
     request(api, function (error, response, body) {
         if(error){
@@ -31,27 +34,34 @@ function requestJSON(){
     })
 }
 
-function verify(){
+function verify(api){
     if(!fs.existsSync("./documents")){
         fs.mkdirSync("./documents")
         
     }
-    const nomeApi = nameCreator() + ".json";
+    const fileName = nameCreator(api) + ".json";
     const files = fs.readdirSync("./documents")
     files.forEach(async file =>{
         console.log(file);
-        if(nomeApi == file){
-            fs.readFileSync(`./documents/${nomeApi}`)
+        if(fileName == file){
+            const file = JSON.parse(fs.readFileSync(`./documents/${fileName}`))
+            if(file.time < Date.now()-(1000*60*5)){
+                return file.data;
+            }
         }
         else{
-            let requestJSONAsync = await requestJSON()
-            console.log(requestJSONAsync)
-            fs.writeFileSync(`./documents/${nomeApi}`, JSON.stringify(requestJSONAsync))
+
+            const requestJSONAsync = await requestJSON(api)
+            const newObject = {
+                data: requestJSONAsync, 
+                time: Date.now()
+            } 
+            fs.writeFileSync(`./documents/${fileName}`, JSON.stringify(newObject))
         }
     })    
 }
 
-function nameCreator(){
+function nameCreator(api){
     nomeApi = api.replace(/[.]/g, "-").replace("https://", "").replace(/\//g, "-");
     console.log(nomeApi);
     return nomeApi;
