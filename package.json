@@ -4,7 +4,7 @@
   "description": "Node.js module to perform request and caching in json format.",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"test? why?\" && exit 1"
   },
   "repository": {
     "type": "git",
