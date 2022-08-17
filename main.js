@@ -1,68 +1,75 @@
 const request = require('request');
 const fs = require('fs');
-const { stringify } = require('querystring');
-const { getSystemErrorMap } = require('util');
 
-module.exports.main = function(api){
-    verify(api)
+let _options;
+
+const defaultOptions = {
+    timeout: 30,
+    isCached: false,
+    dir: './cache'
+};
+
+function genId(url) {
+    return btoa(url).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
 }
 
+async function getCache(id) {
+    fs.existsSync(_options.dir) || fs.mkdirSync(_options.dir);
+    const index = fs.readdirSync(_options.dir).findIndex(file => file == id + '.json');
+    let data;
 
-function requestJSON(api){
-    return new Promise(async function(dat, err){
-    request(api, function (error, response, body) {
-        if(error){
-            console.log("link quebrado")
-            return;
-        }
-        if(response.statusCode != "200"){
-            console.log("Code invalid" + response.statusCode)
-            return;
-        }
-        var objeto
-        try {
-            objeto = JSON.parse(body)
-
-        } catch (error) {
-            console.log("Deu erro amigao, não eh um jason \n" + error)
-            return;
-        }
-        console.log('api toda: ', objeto)
-        dat(objeto)
-    });
-      
-    })
-}
-
-function verify(api){
-    if(!fs.existsSync("./documents")){
-        fs.mkdirSync("./documents")
-        
+    if(index > -1) {
+        const file = fs.readFileSync(_options.dir + '/' + id + '.json');
+        data = JSON.parse(file);
     }
-    const fileName = nameCreator(api) + ".json";
-    const files = fs.readdirSync("./documents")
-    files.forEach(async file =>{
-        console.log(file);
-        if(fileName == file){
-            const file = JSON.parse(fs.readFileSync(`./documents/${fileName}`))
-            if(file.time < Date.now()-(1000*60*5)){
-                return file.data;
-            }
-        }
-        else{
 
-            const requestJSONAsync = await requestJSON(api)
-            const newObject = {
-                data: requestJSONAsync, 
-                time: Date.now()
-            } 
-            fs.writeFileSync(`./documents/${fileName}`, JSON.stringify(newObject))
-        }
-    })    
+    if(data?.time + _options.timeout * 1000 > Date.now())
+        return data.data;
+    else
+        return;
 }
 
-function nameCreator(api){
-    nomeApi = api.replace(/[.]/g, "-").replace("https://", "").replace(/\//g, "-");
-    console.log(nomeApi);
-    return nomeApi;
+async function updateCache(id, data) {
+    data = {
+        time: Date.now(),
+        data: data
+    }
+
+    fs.existsSync(_options.dir) || fs.mkdirSync(_options.dir);
+    fs.writeFileSync(_options.dir + '/' + id + '.json', JSON.stringify(data));
+}
+
+function fetch (url, options) {
+    return new Promise(async(resolve, reject) => {
+        _options = Object.assign({}, defaultOptions, options);
+        const id = genId(url);
+        const cache = await getCache(id);
+
+        if(cache) {
+            if(_options.isCached)
+                resolve({cached: true, data: cache});
+            else
+                resolve(cache);
+        } else {
+            request(url, (err, res, body) => {
+                if(err) return reject(err);
+                try {
+                    const data = JSON.parse(body);
+
+                    updateCache(id, data);
+
+                    if(_options.isCached)
+                        resolve({cached: false, data: data});
+                    else
+                        resolve(data);
+                } catch (error) {
+                    reject('Invalid JSON response');
+                }
+            });
+        }
+    });
+}
+
+module.exports = {
+    fetch
 }
