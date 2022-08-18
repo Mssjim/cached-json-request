@@ -1,6 +1,6 @@
 {
-  "name": "cached-json-request",
-  "version": "1.0.0",
+  "name": "cjr",
+  "version": "1.0.1",
   "description": "Node.js module to perform request and caching in json format.",
   "main": "main.js",
   "scripts": {

@@ -39,6 +39,15 @@ async function updateCache(id, data) {
     fs.writeFileSync(_options.dir + '/' + id + '.json', JSON.stringify(data));
 }
 
+/**
+    * Returns a Promise with data/error from request
+    * @param {string} url - The url from request
+    * @param {Object} [options] - An Object with optional settings 
+    * @param {number} [options.timeout = 30] - The timeout (in seconds) to ignore cache and fetch again
+    * @param {string} [options.dir = "./cache"] - Folder to store cache json files
+    * @param {boolean} [options.isCached = false] - If true, will return the info if the request is from cache
+    * @return {Promise<>}
+*/
 function fetch (url, options) {
     return new Promise(async(resolve, reject) => {
         _options = Object.assign({}, defaultOptions, options);
